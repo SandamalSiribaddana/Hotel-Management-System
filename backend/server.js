@@ -1,18 +1,13 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const bcrypt = require("bcryptjs");
-const User = require("./models/User");
+const { connectDB } = require("./config/db");
+const User = require("./user/User");
 
-const authRoutes = require("./routes/authRoutes");
-const roomRoutes = require("./routes/roomRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const serviceRoutes = require("./routes/serviceRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
-const complaintRoutes = require("./routes/complaintRoutes");
-const staffRoutes = require("./routes/staffRoutes");
+const authRoutes = require("./auth/authRoutes");
+const { notFound, errorHandler } = require("./exception/errorHandler");
 
 dotenv.config();
 
@@ -29,28 +24,10 @@ app.use("/uploads", express.static("uploads"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
-  res.send("Hotel Backend is running");
+  res.send("Hotel Backend (base template) is running");
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/rooms", roomRoutes);
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/services", serviceRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/complaints", complaintRoutes);
-app.use("/api/staff", staffRoutes);
-
-if (!process.env.MONGO_URI) {
-  console.log("MONGO_URI is missing in .env file");
-  process.exit(1);
-}
-
-const mongoOptions = {
-  serverSelectionTimeoutMS: 10000,
-  socketTimeoutMS: 45000,
-  connectTimeoutMS: 10000,
-  maxPoolSize: 10,
-};
 
 // Auto-create admin account from .env on startup
 const seedAdmin = async () => {
@@ -80,8 +57,10 @@ const seedAdmin = async () => {
   console.log(`✅ Admin account created: ${ADMIN_EMAIL}`);
 };
 
-mongoose
-  .connect(process.env.MONGO_URI, mongoOptions)
+app.use(notFound);
+app.use(errorHandler);
+
+connectDB(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB connected successfully");
 
