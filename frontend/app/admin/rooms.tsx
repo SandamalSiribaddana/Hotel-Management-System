@@ -15,6 +15,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
+import { Image, Platform } from "react-native";
 
 const EMPTY_ROOM = {
   roomNumber: "",
@@ -32,6 +34,27 @@ export default function AdminRoomsScreen() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(EMPTY_ROOM);
   const [saving, setSaving] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://via.placeholder.com/150";
+    if (path.startsWith("http")) return path;
+    const baseUrl = API.defaults.baseURL?.replace("/api", "") || "";
+    return `${baseUrl}${path}`;
+  };
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
 
   const getHeaders = async () => {
     const token = await AsyncStorage.getItem("token");
@@ -55,6 +78,7 @@ export default function AdminRoomsScreen() {
   const openAdd = () => {
     setEditing(null);
     setForm(EMPTY_ROOM);
+    setImageUri(null);
     setModalVisible(true);
   };
 
@@ -68,6 +92,7 @@ export default function AdminRoomsScreen() {
       description: room.description,
       availabilityStatus: room.availabilityStatus,
     });
+    setImageUri(room.image ? getImageUrl(room.image) : null);
     setModalVisible(true);
   };
 
@@ -79,16 +104,47 @@ export default function AdminRoomsScreen() {
     setSaving(true);
     try {
       const headers = await getHeaders();
-      const payload = {
+      let isMultipart = false;
+      
+      const formData = new FormData();
+      formData.append("roomNumber", form.roomNumber);
+      formData.append("roomType", form.roomType);
+      formData.append("price", String(form.price));
+      formData.append("maxPersons", String(form.maxPersons));
+      formData.append("description", form.description);
+      formData.append("availabilityStatus", form.availabilityStatus);
+
+      if (imageUri && imageUri.startsWith("file://")) {
+        isMultipart = true;
+        const filename = imageUri.split("/").pop() || "image.jpg";
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
+        formData.append("image", {
+          uri: Platform.OS === "android" ? imageUri : imageUri.replace("file://", ""),
+          name: filename,
+          type,
+        } as any);
+      }
+
+      const config = {
+        headers: {
+          ...headers,
+          ...(isMultipart ? { "Content-Type": "multipart/form-data" } : {}),
+        },
+      };
+
+      const payload = isMultipart ? formData : {
         ...form,
         price: Number(form.price),
         maxPersons: Number(form.maxPersons),
       };
+
       if (editing) {
-        await API.put(`/rooms/${editing._id}`, payload, { headers });
+        await API.put(`/rooms/${editing._id}`, payload, config);
         Alert.alert("Success", "Room updated.");
       } else {
-        await API.post("/rooms", payload, { headers });
+        await API.post("/rooms", payload, config);
         Alert.alert("Success", "Room created.");
       }
       setModalVisible(false);
@@ -144,10 +200,12 @@ export default function AdminRoomsScreen() {
           ListEmptyComponent={<Text style={styles.empty}>No rooms found. Add one!</Text>}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <View style={styles.cardTop}>
-                <View style={styles.roomBadge}>
-                  <Text style={styles.roomNumber}>#{item.roomNumber}</Text>
-                </View>
+              <Image source={{ uri: getImageUrl(item.image) }} style={styles.cardImage} />
+              <View style={styles.cardContent}>
+                <View style={styles.cardTop}>
+                  <View style={styles.roomBadge}>
+                    <Text style={styles.roomNumber}>#{item.roomNumber}</Text>
+                  </View>
                 <View style={[styles.statusBadge, { backgroundColor: statusColor(item.availabilityStatus) + "22" }]}>
                   <Text style={[styles.statusText, { color: statusColor(item.availabilityStatus) }]}>
                     {item.availabilityStatus === "booked" ? "Not Available" : "Available"}
@@ -161,14 +219,15 @@ export default function AdminRoomsScreen() {
                 <Text style={styles.metaItem}>👥 {item.maxPersons} guests</Text>
               </View>
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(item)}>
-                  <Ionicons name="pencil-outline" size={16} color="#6C63FF" />
-                  <Text style={styles.editText}>Edit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
-                  <Ionicons name="trash-outline" size={16} color="#E63946" />
-                  <Text style={styles.deleteText}>Delete</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(item)}>
+                    <Ionicons name="pencil-outline" size={16} color="#6C63FF" />
+                    <Text style={styles.editText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
+                    <Ionicons name="trash-outline" size={16} color="#E63946" />
+                    <Text style={styles.deleteText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}
@@ -181,6 +240,18 @@ export default function AdminRoomsScreen() {
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>{editing ? "Edit Room" : "Add Room"}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.imagePickerContainer}>
+                <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage}>
+                  {imageUri ? (
+                    <Image source={{ uri: imageUri }} style={styles.previewImage} />
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <Ionicons name="camera-outline" size={32} color="#888" />
+                      <Text style={styles.imagePlaceholderText}>Upload Image</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
               {[
                 { key: "roomNumber", label: "Room Number *", placeholder: "e.g. 101" },
                 { key: "roomType", label: "Room Type *", placeholder: "e.g. Deluxe" },
@@ -262,13 +333,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 16,
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
+  cardImage: { width: "100%", height: 160 },
+  cardContent: { padding: 16 },
   cardTop: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   roomBadge: {
     backgroundColor: "#EEF0FF",
@@ -360,4 +433,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveText: { color: "#fff", fontWeight: "800", fontSize: 15 },
+  imagePickerContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  imagePickerBtn: {
+    width: 140,
+    height: 100,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
+    borderStyle: "dashed",
+    overflow: "hidden",
+    backgroundColor: "#FAFAFA",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+  },
+  imagePlaceholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePlaceholderText: {
+    color: "#888",
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: "600",
+  },
 });
