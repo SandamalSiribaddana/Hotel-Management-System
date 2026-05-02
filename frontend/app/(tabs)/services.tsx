@@ -55,7 +55,7 @@ export default function ServicesScreen() {
   };
 
   const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return null;
+    if (!imagePath) return undefined;
     return `${process.env.EXPO_PUBLIC_API_URL?.replace("/api", "") || "http://10.0.2.2:5000"}/${imagePath}`;
   };
 

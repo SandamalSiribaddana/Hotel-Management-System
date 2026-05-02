@@ -135,7 +135,7 @@ export default function AdminServicesScreen() {
   };
 
   const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return null;
+    if (!imagePath) return undefined;
     return `${process.env.EXPO_PUBLIC_API_URL?.replace("/api", "") || "http://10.0.2.2:5000"}/${imagePath}`;
   };
 
@@ -147,7 +147,7 @@ export default function AdminServicesScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Services</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.requestsBtn} onPress={() => router.push("/admin/service-requests")}>
+          <TouchableOpacity style={styles.requestsBtn} onPress={() => router.push("/admin/service-requests" as any)}>
             <Ionicons name="reader-outline" size={20} color="#fff" />
             <Text style={styles.requestsBtnText}>Requests</Text>
           </TouchableOpacity>
