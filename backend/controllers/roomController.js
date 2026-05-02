@@ -14,8 +14,10 @@ const createRoom = async (req, res) => {
     } = req.body;
 
     let image = req.body.image || "";
-    if (req.file) {
-      image = "/uploads/rooms/" + req.file.filename;
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => "/uploads/rooms/" + file.filename);
+      image = images[0]; // Set first image as the primary image for backward compatibility
     }
 
     if (!roomNumber || !roomType || !price || !maxPersons || !description) {
@@ -39,6 +41,7 @@ const createRoom = async (req, res) => {
       maxPersons,
       description,
       image,
+      images,
       availabilityStatus,
     });
 
@@ -120,8 +123,9 @@ const updateRoom = async (req, res) => {
     }
 
     const updateData = { ...req.body };
-    if (req.file) {
-      updateData.image = "/uploads/rooms/" + req.file.filename;
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map(file => "/uploads/rooms/" + file.filename);
+      updateData.image = updateData.images[0];
     }
 
     const updatedRoom = await Room.findByIdAndUpdate(id, updateData, {
