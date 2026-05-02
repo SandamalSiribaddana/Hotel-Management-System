@@ -20,12 +20,15 @@ const createStaff = async (req, res) => {
       });
     }
 
+    const photo = req.file ? "/uploads/staff/" + req.file.filename : "";
+
     const staff = await Staff.create({
       name,
       role,
       phone,
       email,
       salary,
+      photo,
     });
 
     res.status(201).json({
@@ -111,9 +114,14 @@ const updateStaff = async (req, res) => {
       });
     }
 
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.photo = "/uploads/staff/" + req.file.filename;
+    }
+
     const updatedStaff = await Staff.findByIdAndUpdate(
       id,
-      req.body,
+      updateData,
       {
         new: true,
         runValidators: true,
