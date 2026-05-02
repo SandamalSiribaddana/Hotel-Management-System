@@ -9,10 +9,13 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  Image,
+  Platform,
 } from "react-native";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -25,10 +28,31 @@ export default function AdminStaffScreen() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   const getHeaders = async () => {
     const token = await AsyncStorage.getItem("token");
     return { Authorization: `Bearer ${token}` };
+  };
+
+  const getPhotoUrl = (path: string) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    const baseUrl = API.defaults.baseURL?.replace("/api", "") || "";
+    return `${baseUrl}${path}`;
+  };
+
+  const pickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setPhotoUri(result.assets[0].uri);
+    }
   };
 
   const fetchStaff = async () => {
@@ -49,6 +73,7 @@ export default function AdminStaffScreen() {
   const openAdd = () => {
     setEditing(null);
     setForm(EMPTY);
+    setPhotoUri(null);
     setModalVisible(true);
   };
 
@@ -61,6 +86,7 @@ export default function AdminStaffScreen() {
       email: s.email,
       salary: String(s.salary),
     });
+    setPhotoUri(null); // user picks new photo to replace
     setModalVisible(true);
   };
 
@@ -72,12 +98,35 @@ export default function AdminStaffScreen() {
     setSaving(true);
     try {
       const headers = await getHeaders();
-      const payload = { ...form, salary: Number(form.salary) };
+
+      // Always use FormData so multer can process it
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("role", form.role);
+      formData.append("phone", form.phone);
+      formData.append("email", form.email);
+      formData.append("salary", form.salary);
+
+      if (photoUri && !photoUri.startsWith("http")) {
+        const filename = photoUri.split("/").pop() || "photo.jpg";
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : "image/jpeg";
+        formData.append("photo", {
+          uri: Platform.OS === "android" ? photoUri : photoUri.replace("file://", ""),
+          name: filename,
+          type,
+        } as any);
+      }
+
+      const config = {
+        headers: { ...headers, "Content-Type": "multipart/form-data" },
+      };
+
       if (editing) {
-        await API.put(`/staff/${editing._id}`, payload, { headers });
+        await API.put(`/staff/${editing._id}`, formData, config);
         Alert.alert("Success", "Staff updated.");
       } else {
-        await API.post("/staff", payload, { headers });
+        await API.post("/staff", formData, config);
         Alert.alert("Success", "Staff added.");
       }
       setModalVisible(false);
@@ -116,8 +165,7 @@ export default function AdminStaffScreen() {
     Chef: "#2DC653",
   };
 
-  const getRoleColor = (role: string) =>
-    ROLE_COLORS[role] || "#9B2335";
+  const getRoleColor = (role: string) => ROLE_COLORS[role] || "#9B2335";
 
   return (
     <View style={styles.root}>
@@ -141,13 +189,18 @@ export default function AdminStaffScreen() {
           ListEmptyComponent={<Text style={styles.empty}>No staff records. Add one!</Text>}
           renderItem={({ item }) => {
             const color = getRoleColor(item.role);
+            const photoUrl = getPhotoUrl(item.photo);
             return (
               <View style={styles.card}>
-                <View style={[styles.avatar, { backgroundColor: color + "22" }]}>
-                  <Text style={[styles.avatarText, { color }]}>
-                    {item.name?.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
+                {photoUrl ? (
+                  <Image source={{ uri: photoUrl }} style={styles.avatarPhoto} />
+                ) : (
+                  <View style={[styles.avatar, { backgroundColor: color + "22" }]}>
+                    <Text style={[styles.avatarText, { color }]}>
+                      {item.name?.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.cardBody}>
                   <View style={styles.nameRow}>
                     <Text style={styles.cardName}>{item.name}</Text>
@@ -189,6 +242,23 @@ export default function AdminStaffScreen() {
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>{editing ? "Edit Staff" : "Add Staff"}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
+              
+              {/* Profile Photo Picker */}
+              <View style={styles.photoPicker}>
+                <TouchableOpacity onPress={pickPhoto} style={styles.photoPickerBtn}>
+                  {photoUri ? (
+                    <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                  ) : editing?.photo ? (
+                    <Image source={{ uri: getPhotoUrl(editing.photo)! }} style={styles.photoPreview} />
+                  ) : (
+                    <View style={styles.photoPlaceholder}>
+                      <Ionicons name="person-circle-outline" size={40} color="#aaa" />
+                      <Text style={styles.photoPlaceholderText}>Upload Photo</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+
               {[
                 { key: "name", label: "Full Name *", placeholder: "e.g. John Smith" },
                 { key: "role", label: "Role *", placeholder: "e.g. Receptionist" },
@@ -208,6 +278,7 @@ export default function AdminStaffScreen() {
                   />
                 </View>
               ))}
+
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
                   <Text style={styles.cancelText}>Cancel</Text>
@@ -257,6 +328,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+    alignItems: "flex-start",
   },
   avatar: {
     width: 52, height: 52,
@@ -265,9 +337,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14,
   },
+  avatarPhoto: {
+    width: 52, height: 52,
+    borderRadius: 16,
+    marginRight: 14,
+    resizeMode: "cover",
+  },
   avatarText: { fontSize: 22, fontWeight: "900" },
   cardBody: { flex: 1 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" },
   cardName: { fontSize: 16, fontWeight: "800", color: "#1A1A2E" },
   roleBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   roleText: { fontSize: 11, fontWeight: "700" },
@@ -275,25 +353,13 @@ const styles = StyleSheet.create({
   infoText: { fontSize: 12, color: "#666" },
   actions: { flexDirection: "row", gap: 8, marginTop: 10 },
   editBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: "#EEF0FF",
-    paddingVertical: 8,
-    borderRadius: 8,
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 5, backgroundColor: "#EEF0FF", paddingVertical: 8, borderRadius: 8,
   },
   editText: { color: "#6C63FF", fontWeight: "700", fontSize: 13 },
   deleteBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: "#FDECEA",
-    paddingVertical: 8,
-    borderRadius: 8,
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 5, backgroundColor: "#FDECEA", paddingVertical: 8, borderRadius: 8,
   },
   deleteText: { color: "#E63946", fontWeight: "700", fontSize: 13 },
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
@@ -302,9 +368,25 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    maxHeight: "90%",
+    maxHeight: "92%",
   },
   modalTitle: { fontSize: 20, fontWeight: "800", color: "#1A1A2E", marginBottom: 16 },
+
+  // Photo picker
+  photoPicker: { alignItems: "center", marginBottom: 20 },
+  photoPickerBtn: {
+    width: 100, height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    borderStyle: "dashed",
+    overflow: "hidden",
+    backgroundColor: "#FAFAFA",
+  },
+  photoPreview: { width: "100%", height: "100%", resizeMode: "cover" },
+  photoPlaceholder: { flex: 1, alignItems: "center", justifyContent: "center" },
+  photoPlaceholderText: { fontSize: 11, color: "#aaa", marginTop: 4, fontWeight: "600" },
+
   fieldWrap: { marginBottom: 14 },
   fieldLabel: { fontSize: 13, fontWeight: "600", color: "#555", marginBottom: 6 },
   input: {
