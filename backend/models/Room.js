@@ -27,6 +27,10 @@ const roomSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    images: {
+      type: [String],
+      default: [],
+    },
     availabilityStatus: {
       type: String,
       enum: ["available", "booked"],
