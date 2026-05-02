@@ -3,11 +3,13 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
   Alert,
   Modal,
+  Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../../services/api";
@@ -27,6 +29,13 @@ export default function RoomsScreen() {
   const [showCheckInPicker, setShowCheckInPicker] = useState(false);
   const [showCheckOutPicker, setShowCheckOutPicker] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://via.placeholder.com/400x200?text=No+Image";
+    if (path.startsWith("http")) return path;
+    const baseUrl = API.defaults.baseURL?.replace("/api", "") || "";
+    return `${baseUrl}${path}`;
+  };
 
   useEffect(() => {
     fetchRooms();
@@ -112,8 +121,28 @@ export default function RoomsScreen() {
       <FlatList
         data={rooms}
         keyExtractor={(item: any) => item._id}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          let roomImages = [];
+          if (item.images && item.images.length > 0) {
+            roomImages = item.images.map((img: string) => getImageUrl(img));
+          } else if (item.image) {
+            roomImages = [getImageUrl(item.image)];
+          } else {
+            roomImages = ["https://via.placeholder.com/400x200?text=No+Image"];
+          }
+
+          return (
           <View style={styles.card}>
+            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
+              {roomImages.map((uri: string, index: number) => (
+                <Image key={index} source={{ uri }} style={styles.cardImage} />
+              ))}
+            </ScrollView>
+            <View style={styles.imageIndicatorContainer}>
+              {roomImages.length > 1 && roomImages.map((_: any, index: number) => (
+                <View key={index} style={styles.dot} />
+              ))}
+            </View>
             <View style={styles.cardContent}>
               <Text style={styles.roomType}>{item.roomType}</Text>
               <Text style={styles.roomNumber}>Room {item.roomNumber}</Text>
@@ -140,7 +169,8 @@ export default function RoomsScreen() {
               <Text style={styles.buttonText}>Book Now</Text>
             </TouchableOpacity>
           </View>
-        )}
+          );
+        }}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={<Text style={styles.emptyText}>No rooms available.</Text>}
       />
@@ -224,6 +254,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
+  },
+  cardImage: {
+    width: 350, // rough fixed width to allow paging effect nicely in card
+    height: 200,
+    backgroundColor: "#E0E5F2",
+    resizeMode: "cover",
+  },
+  imageScroll: {
+    width: "100%",
+    height: 200,
+  },
+  imageIndicatorContainer: {
+    flexDirection: "row",
+    position: "absolute",
+    top: 180,
+    alignSelf: "center",
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.8)",
   },
   cardContent: { padding: 20 },
   roomType: { fontSize: 20, fontWeight: "800", color: "#1A1A2E" },
