@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../../services/api";
@@ -27,6 +28,13 @@ export default function RoomsScreen() {
   const [showCheckInPicker, setShowCheckInPicker] = useState(false);
   const [showCheckOutPicker, setShowCheckOutPicker] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://via.placeholder.com/400x200?text=No+Image";
+    if (path.startsWith("http")) return path;
+    const baseUrl = API.defaults.baseURL?.replace("/api", "") || "";
+    return `${baseUrl}${path}`;
+  };
 
   useEffect(() => {
     fetchRooms();
@@ -114,6 +122,7 @@ export default function RoomsScreen() {
         keyExtractor={(item: any) => item._id}
         renderItem={({ item }) => (
           <View style={styles.card}>
+            <Image source={{ uri: getImageUrl(item.image) }} style={styles.cardImage} />
             <View style={styles.cardContent}>
               <Text style={styles.roomType}>{item.roomType}</Text>
               <Text style={styles.roomNumber}>Room {item.roomNumber}</Text>
@@ -224,6 +233,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
+  },
+  cardImage: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#E0E5F2",
   },
   cardContent: { padding: 20 },
   roomType: { fontSize: 20, fontWeight: "800", color: "#1A1A2E" },
