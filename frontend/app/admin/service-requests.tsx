@@ -180,7 +180,7 @@ export default function AdminServiceRequestsScreen() {
           <View style={styles.modalSlipArea}>
             {!slipUrl ? (
               <View style={styles.modalNoSlip}>
-                <Ionicons name="image-off-outline" size={48} color="#aaa" />
+                <Ionicons name="image-outline" size={48} color="#aaa" />
                 <Text style={styles.modalNoSlipText}>No slip uploaded</Text>
               </View>
             ) : isPdf(slipUrl) ? (
@@ -377,7 +377,7 @@ export default function AdminServiceRequestsScreen() {
             </View>
           ) : (
             <View style={styles.pdfBox}>
-              <Ionicons name="image-off-outline" size={22} color="#aaa" />
+              <Ionicons name="image-outline" size={22} color="#aaa" />
               <Text style={[styles.pdfText, { color: "#aaa" }]}>No slip</Text>
             </View>
           )}
