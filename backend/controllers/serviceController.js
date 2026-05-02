@@ -5,7 +5,12 @@ const mongoose = require("mongoose");
 // CREATE service
 const createService = async (req, res) => {
   try {
-    const service = await Service.create(req.body);
+    const payload = { ...req.body };
+    if (req.file) {
+      payload.image = req.file.path.replace(/\\/g, "/");
+    }
+
+    const service = await Service.create(payload);
 
     res.status(201).json({
       message: "Service created successfully",
@@ -82,9 +87,14 @@ const updateService = async (req, res) => {
       });
     }
 
+    const payload = { ...req.body };
+    if (req.file) {
+      payload.image = req.file.path.replace(/\\/g, "/");
+    }
+
     const updatedService = await Service.findByIdAndUpdate(
       id,
-      req.body,
+      payload,
       {
         new: true,
         runValidators: true,
