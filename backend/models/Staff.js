@@ -31,6 +31,11 @@ const staffSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
+    photo: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
