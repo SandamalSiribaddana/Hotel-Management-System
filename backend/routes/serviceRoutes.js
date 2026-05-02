@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const uploadService = require("../middleware/uploadService");
+
 const {
   createService,
   getAllServices,
@@ -17,13 +19,13 @@ router.get("/test", (req, res) => {
 
 
 // CRUD routes
-router.post("/", createService);
+router.post("/", uploadService.single("image"), createService);
 
 router.get("/", getAllServices);
 
 router.get("/:id", getSingleService);
 
-router.put("/:id", updateService);
+router.put("/:id", uploadService.single("image"), updateService);
 
 router.delete("/:id", deleteService);
 
