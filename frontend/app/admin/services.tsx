@@ -9,13 +9,16 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  Image,
+  Switch
 } from "react-native";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import API from "../../services/api";
 
-const EMPTY = { name: "", description: "", price: "" };
+const EMPTY = { name: "", description: "", price: "", availability: true, imageUri: null as string | null };
 
 export default function AdminServicesScreen() {
   const [services, setServices] = useState<any[]>([]);
@@ -47,23 +50,61 @@ export default function AdminServicesScreen() {
 
   const openEdit = (s: any) => {
     setEditing(s);
-    setForm({ name: s.name, description: s.description, price: String(s.price) });
+    setForm({
+      name: s.name,
+      description: s.description,
+      price: String(s.price),
+      availability: s.availability !== undefined ? s.availability : true,
+      imageUri: null // We don't pre-fill this unless they upload a new one
+    });
     setModalVisible(true);
   };
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setForm(prev => ({ ...prev, imageUri: result.assets[0].uri }));
+    }
+  };
+
   const handleSave = async () => {
-    if (!form.name || !form.description || !form.price) {
-      Alert.alert("Validation", "Please fill all fields.");
+    if (!form.name || !form.description || !form.price || (!form.imageUri && (!editing || !editing.image))) {
+      Alert.alert("Validation", "Please fill all required fields and select an image.");
       return;
     }
     setSaving(true);
     try {
-      const payload = { ...form, price: Number(form.price) };
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("description", form.description);
+      formData.append("price", form.price);
+      formData.append("availability", String(form.availability));
+
+      if (form.imageUri) {
+        const uriParts = form.imageUri.split(".");
+        const fileType = uriParts[uriParts.length - 1];
+        formData.append("image", {
+          uri: form.imageUri,
+          name: `photo.${fileType}`,
+          type: `image/${fileType}`,
+        } as any);
+      }
+
       if (editing) {
-        await API.put(`/services/${editing._id}`, payload);
+        await API.put(`/services/${editing._id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
         Alert.alert("Success", "Service updated.");
       } else {
-        await API.post("/services", payload);
+        await API.post("/services", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
         Alert.alert("Success", "Service added.");
       }
       setModalVisible(false);
@@ -93,6 +134,11 @@ export default function AdminServicesScreen() {
     ]);
   };
 
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return null;
+    return `${process.env.EXPO_PUBLIC_API_URL?.replace("/api", "") || "http://10.0.2.2:5000"}/${imagePath}`;
+  };
+
   return (
     <View style={styles.root}>
       <View style={styles.header}>
@@ -100,9 +146,15 @@ export default function AdminServicesScreen() {
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Services</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <Ionicons name="add" size={22} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.requestsBtn} onPress={() => router.push("/admin/service-requests")}>
+            <Ionicons name="reader-outline" size={20} color="#fff" />
+            <Text style={styles.requestsBtnText}>Requests</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
+            <Ionicons name="add" size={22} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading ? (
@@ -115,13 +167,21 @@ export default function AdminServicesScreen() {
           ListEmptyComponent={<Text style={styles.empty}>No services found. Add one!</Text>}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="construct-outline" size={22} color="#F77F00" />
-              </View>
+              {item.image ? (
+                <Image source={{ uri: getImageUrl(item.image) }} style={styles.serviceImage} />
+              ) : (
+                <View style={styles.iconCircle}>
+                  <Ionicons name="construct-outline" size={22} color="#F77F00" />
+                </View>
+              )}
+              
               <View style={styles.cardBody}>
                 <Text style={styles.cardTitle}>{item.name}</Text>
                 <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
                 <Text style={styles.cardPrice}>${item.price}</Text>
+                <Text style={[styles.statusBadge, item.availability ? styles.statusAvailable : styles.statusUnavailable]}>
+                  {item.availability ? "Available" : "Not Available"}
+                </Text>
               </View>
               <View style={styles.actions}>
                 <TouchableOpacity onPress={() => openEdit(item)} style={styles.editBtn}>
@@ -140,7 +200,25 @@ export default function AdminServicesScreen() {
         <View style={styles.overlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>{editing ? "Edit Service" : "Add Service"}</Text>
-            <ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              
+              {/* Image Upload */}
+              <View style={styles.fieldWrap}>
+                <Text style={styles.fieldLabel}>Service Image</Text>
+                <TouchableOpacity style={styles.imageUploadBtn} onPress={pickImage}>
+                  {form.imageUri ? (
+                    <Image source={{ uri: form.imageUri }} style={styles.previewImage} />
+                  ) : editing?.image ? (
+                    <Image source={{ uri: getImageUrl(editing.image) }} style={styles.previewImage} />
+                  ) : (
+                    <View style={styles.placeholderImage}>
+                      <Ionicons name="image-outline" size={24} color="#888" />
+                      <Text style={{ color: "#888", marginTop: 4 }}>Select Image</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+
               {[
                 { key: "name", label: "Service Name *", placeholder: "e.g. Spa" },
                 { key: "description", label: "Description *", placeholder: "Service details", multi: true },
@@ -158,6 +236,17 @@ export default function AdminServicesScreen() {
                   />
                 </View>
               ))}
+
+              <View style={[styles.fieldWrap, styles.switchWrap]}>
+                <Text style={styles.fieldLabel}>Availability</Text>
+                <Switch
+                  value={form.availability}
+                  onValueChange={(v) => setForm((p) => ({ ...p, availability: v }))}
+                  trackColor={{ false: "#767577", true: "#FFF3E0" }}
+                  thumbColor={form.availability ? "#F77F00" : "#f4f3f4"}
+                />
+              </View>
+
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
                   <Text style={styles.cancelText}>Cancel</Text>
@@ -188,6 +277,18 @@ const styles = StyleSheet.create({
   },
   backBtn: { marginRight: 12 },
   headerTitle: { flex: 1, color: "#fff", fontSize: 20, fontWeight: "800" },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
+  requestsBtn: {
+    backgroundColor: "#8338EC",
+    paddingHorizontal: 12,
+    height: 36,
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  requestsBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
   addBtn: {
     backgroundColor: "#F77F00",
     width: 36, height: 36,
@@ -209,6 +310,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  serviceImage: {
+    width: 48, height: 48,
+    borderRadius: 14,
+    marginRight: 14,
+  },
   iconCircle: {
     width: 48, height: 48,
     borderRadius: 14,
@@ -220,7 +326,10 @@ const styles = StyleSheet.create({
   cardBody: { flex: 1 },
   cardTitle: { fontSize: 16, fontWeight: "800", color: "#1A1A2E", marginBottom: 2 },
   cardDesc: { fontSize: 12, color: "#888", marginBottom: 4 },
-  cardPrice: { fontSize: 14, fontWeight: "700", color: "#F77F00" },
+  cardPrice: { fontSize: 14, fontWeight: "700", color: "#F77F00", marginBottom: 4 },
+  statusBadge: { fontSize: 10, fontWeight: "700", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: "flex-start", overflow: "hidden" },
+  statusAvailable: { color: "#2DC653", backgroundColor: "#E6F9EC" },
+  statusUnavailable: { color: "#E63946", backgroundColor: "#FDECEA" },
   actions: { flexDirection: "row", gap: 8, marginLeft: 10 },
   editBtn: {
     width: 36, height: 36,
@@ -253,7 +362,25 @@ const styles = StyleSheet.create({
     fontSize: 15, color: "#1A1A2E",
     backgroundColor: "#FAFAFA",
   },
-  modalActions: { flexDirection: "row", gap: 12, marginTop: 8, marginBottom: 10 },
+  switchWrap: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  imageUploadBtn: {
+    height: 100,
+    borderWidth: 1.5,
+    borderColor: "#E0E0E0",
+    borderStyle: "dashed",
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FAFAFA",
+    overflow: "hidden",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  placeholderImage: { alignItems: "center" },
+  modalActions: { flexDirection: "row", gap: 12, marginTop: 16, marginBottom: 10 },
   cancelBtn: {
     flex: 1, paddingVertical: 14, borderRadius: 12,
     borderWidth: 1.5, borderColor: "#E0E0E0", alignItems: "center",
