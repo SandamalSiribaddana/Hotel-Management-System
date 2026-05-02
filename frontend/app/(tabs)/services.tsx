@@ -5,7 +5,7 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Alert,
+     Alert,
   Image,
   TouchableOpacity,
   Modal,
