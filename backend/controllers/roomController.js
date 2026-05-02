@@ -10,9 +10,13 @@ const createRoom = async (req, res) => {
       price,
       maxPersons,
       description,
-      image,
       availabilityStatus,
     } = req.body;
+
+    let image = req.body.image || "";
+    if (req.file) {
+      image = "/uploads/rooms/" + req.file.filename;
+    }
 
     if (!roomNumber || !roomType || !price || !maxPersons || !description) {
       return res.status(400).json({
@@ -115,7 +119,12 @@ const updateRoom = async (req, res) => {
       });
     }
 
-    const updatedRoom = await Room.findByIdAndUpdate(id, req.body, {
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.image = "/uploads/rooms/" + req.file.filename;
+    }
+
+    const updatedRoom = await Room.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
