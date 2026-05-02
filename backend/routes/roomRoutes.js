@@ -9,10 +9,10 @@ router.get("/test", (req, res) => {
 });
 
 // CRUD routes
-router.post("/", upload.single("image"), roomController.createRoom);
+router.post("/", upload.array("images", 5), roomController.createRoom);
 router.get("/", roomController.getAllRooms);
 router.get("/:id", roomController.getSingleRoom);
-router.put("/:id", upload.single("image"), roomController.updateRoom);
+router.put("/:id", upload.array("images", 5), roomController.updateRoom);
 router.delete("/:id", roomController.deleteRoom);
 
 module.exports = router;
