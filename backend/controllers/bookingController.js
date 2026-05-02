@@ -264,6 +264,12 @@ const updateBooking = async (req, res) => {
       });
     }
 
+    if (req.body.status === "Cancelled" && booking.status === "Completed") {
+      return res.status(400).json({
+        message: "Completed bookings cannot be cancelled.",
+      });
+    }
+
     // Update payment record when booking is completed
     if (req.body.status === "Completed" && booking.status !== "Completed") {
       const payment = await Payment.findOne({ bookingId: id });
