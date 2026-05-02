@@ -34,6 +34,31 @@ export default function BookingsScreen() {
     }
   };
 
+  const handleDelete = (bookingId: string) => {
+    Alert.alert(
+      "Delete Booking",
+      "Are you sure you want to delete this booking?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem("token");
+              await API.delete(`/bookings/${bookingId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              fetchBookings();
+            } catch (error: any) {
+              Alert.alert("Error", error?.response?.data?.message || "Failed to delete booking");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -70,6 +95,15 @@ export default function BookingsScreen() {
             {item.status}
           </Text>
           <Text style={styles.price}>Total: ${item.totalAmount}</Text>
+          
+          {(item.status === "Completed" || item.status === "Cancelled") && (
+            <TouchableOpacity 
+              style={styles.deleteBtn} 
+              onPress={() => handleDelete(item._id)}
+            >
+              <Text style={styles.deleteBtnText}>Delete</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -109,5 +143,7 @@ const styles = StyleSheet.create({
   dateInfo: { fontSize: 14, color: "#888", marginBottom: 8 },
   status: { fontSize: 13, fontWeight: "700", color: "#F77F00", marginBottom: 8, backgroundColor: "#FFF3E0", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, alignSelf: "flex-start", overflow: "hidden" },
   price: { fontSize: 16, fontWeight: "bold", color: "#6C63FF", marginTop: 4 },
+  deleteBtn: { marginTop: 12, backgroundColor: "#FDECEA", paddingVertical: 10, borderRadius: 12, alignItems: "center" },
+  deleteBtnText: { color: "#E63946", fontWeight: "bold", fontSize: 14 },
   emptyText: { textAlign: "center", marginTop: 20, fontSize: 16, color: "#777" },
 });

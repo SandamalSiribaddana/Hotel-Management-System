@@ -7,6 +7,7 @@ export default function AdminLayout() {
       <Stack.Screen name="rooms" />
       <Stack.Screen name="bookings" />
       <Stack.Screen name="services" />
+      <Stack.Screen name="service-requests" />
       <Stack.Screen name="payments" />
       <Stack.Screen name="complaints" />
       <Stack.Screen name="staff" />
