@@ -1,13 +1,19 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const bcrypt = require("bcryptjs");
-const { connectDB } = require("./config/db");
-const User = require("./user/User");
+const User = require("./models/User");
 
-const authRoutes = require("./auth/authRoutes");
-const { notFound, errorHandler } = require("./exception/errorHandler");
+const authRoutes = require("./routes/authRoutes");
+const roomRoutes = require("./routes/roomRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
+const serviceRoutes = require("./routes/serviceRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const complaintRoutes = require("./routes/complaintRoutes");
+const staffRoutes = require("./routes/staffRoutes");
+const servicePaymentRoutes = require("./routes/servicePaymentRoutes");
 
 dotenv.config();
 
@@ -24,23 +30,42 @@ app.use("/uploads", express.static("uploads"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
-  res.send("Hotel Backend (base template) is running");
+  res.send("Hotel Backend is running");
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/service-payments", servicePaymentRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/complaints", complaintRoutes);
+app.use("/api/staff", staffRoutes);
+
+if (!process.env.MONGO_URI) {
+  console.log("MONGO_URI is missing in .env file");
+  process.exit(1);
+}
+
+const mongoOptions = {
+  serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
+  connectTimeoutMS: 10000,
+  maxPoolSize: 10,
+};
 
 // Auto-create admin account from .env on startup
 const seedAdmin = async () => {
   const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
 
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.log("⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set in .env — skipping admin seed.");
+    console.log("  ADMIN_EMAIL or ADMIN_PASSWORD not set in .env — skipping admin seed.");
     return;
   }
 
   const existing = await User.findOne({ email: ADMIN_EMAIL });
   if (existing) {
-    console.log(`ℹ️  Admin already exists: ${ADMIN_EMAIL}`);
+    console.log(`Admin already exists: ${ADMIN_EMAIL}`);
     return;
   }
 
@@ -54,15 +79,13 @@ const seedAdmin = async () => {
     role: "admin",
   });
 
-  console.log(`✅ Admin account created: ${ADMIN_EMAIL}`);
+  console.log(`Admin account created: ${ADMIN_EMAIL}`);
 };
 
-app.use(notFound);
-app.use(errorHandler);
-
-connectDB(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI, mongoOptions)
   .then(async () => {
-    console.log("✅ MongoDB connected successfully");
+    console.log("MongoDB connected successfully");
 
     // Auto-seed admin from .env
     await seedAdmin();
@@ -70,11 +93,11 @@ connectDB(process.env.MONGO_URI)
     const PORT = process.env.PORT || 5000;
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`Server is running on port ${PORT}`);
     });
   })
   .catch((error) => {
-    console.error("❌ MongoDB connection failed!");
+    console.error(" MongoDB connection failed!");
     console.error("   Error code :", error.code || "N/A");
     console.error("   Error message:", error.message);
     if (error.code === "ECONNREFUSED" || error.message.includes("querySrv") || error.message.includes("ECONNREFUSED")) {
