@@ -34,7 +34,7 @@ export default function AdminRoomsScreen() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(EMPTY_ROOM);
   const [saving, setSaving] = useState(false);
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUris, setImageUris] = useState<string[]>([]);
 
   const getImageUrl = (path: string) => {
     if (!path) return "https://via.placeholder.com/150";
@@ -43,16 +43,16 @@ export default function AdminRoomsScreen() {
     return `${baseUrl}${path}`;
   };
 
-  const pickImage = async () => {
+  const pickImages = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
       quality: 0.8,
     });
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+    if (!result.canceled && result.assets) {
+      setImageUris(result.assets.map(a => a.uri));
     }
   };
 
@@ -78,7 +78,7 @@ export default function AdminRoomsScreen() {
   const openAdd = () => {
     setEditing(null);
     setForm(EMPTY_ROOM);
-    setImageUri(null);
+    setImageUris([]);
     setModalVisible(true);
   };
 
@@ -92,7 +92,15 @@ export default function AdminRoomsScreen() {
       description: room.description,
       availabilityStatus: room.availabilityStatus,
     });
-    setImageUri(room.image ? getImageUrl(room.image) : null);
+    
+    if (room.images && room.images.length > 0) {
+      setImageUris(room.images.map((img: string) => getImageUrl(img)));
+    } else if (room.image) {
+      setImageUris([getImageUrl(room.image)]);
+    } else {
+      setImageUris([]);
+    }
+    
     setModalVisible(true);
   };
 
@@ -114,18 +122,20 @@ export default function AdminRoomsScreen() {
       formData.append("description", form.description);
       formData.append("availabilityStatus", form.availabilityStatus);
 
-      if (imageUri && imageUri.startsWith("file://")) {
-        isMultipart = true;
-        const filename = imageUri.split("/").pop() || "image.jpg";
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
+      imageUris.forEach((uri, index) => {
+        if (!uri.startsWith("http")) { // New local image
+          isMultipart = true;
+          const filename = uri.split("/").pop() || `image${index}.jpg`;
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : `image`;
 
-        formData.append("image", {
-          uri: Platform.OS === "android" ? imageUri : imageUri.replace("file://", ""),
-          name: filename,
-          type,
-        } as any);
-      }
+          formData.append("images", {
+            uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
+            name: filename,
+            type,
+          } as any);
+        }
+      });
 
       const config = {
         headers: {
@@ -241,16 +251,21 @@ export default function AdminRoomsScreen() {
             <Text style={styles.modalTitle}>{editing ? "Edit Room" : "Add Room"}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.imagePickerContainer}>
-                <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage}>
-                  {imageUri ? (
-                    <Image source={{ uri: imageUri }} style={styles.previewImage} />
-                  ) : (
-                    <View style={styles.imagePlaceholder}>
-                      <Ionicons name="camera-outline" size={32} color="#888" />
-                      <Text style={styles.imagePlaceholderText}>Upload Image</Text>
-                    </View>
-                  )}
+                <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImages}>
+                  <View style={styles.imagePlaceholder}>
+                    <Ionicons name="images-outline" size={32} color="#888" />
+                    <Text style={styles.imagePlaceholderText}>Upload Images (Max 5)</Text>
+                  </View>
                 </TouchableOpacity>
+                {imageUris.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectedImagesScroll}>
+                    {imageUris.map((uri, index) => (
+                      <View key={index} style={styles.selectedImageContainer}>
+                        <Image source={{ uri }} style={styles.previewImage} />
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
               </View>
               {[
                 { key: "roomNumber", label: "Room Number *", placeholder: "e.g. 101" },
@@ -436,20 +451,36 @@ const styles = StyleSheet.create({
   imagePickerContainer: {
     alignItems: "center",
     marginBottom: 20,
+    width: "100%",
   },
   imagePickerBtn: {
-    width: 140,
-    height: 100,
+    width: "100%",
+    height: 80,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: "#E0E0E0",
     borderStyle: "dashed",
     overflow: "hidden",
     backgroundColor: "#FAFAFA",
+    marginBottom: 10,
+  },
+  selectedImagesScroll: {
+    flexDirection: "row",
+    width: "100%",
+  },
+  selectedImageContainer: {
+    width: 80,
+    height: 80,
+    marginRight: 10,
+    borderRadius: 8,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   previewImage: {
     width: "100%",
     height: "100%",
+    resizeMode: "cover",
   },
   imagePlaceholder: {
     flex: 1,
