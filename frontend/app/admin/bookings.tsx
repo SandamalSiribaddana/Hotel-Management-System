@@ -16,7 +16,7 @@ import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  "Pending Payment":   { bg: "#FFF8E1", text: "#F77F00" },
+  "Pending Payment": { bg: "#FFF8E1", text: "#F77F00" },
   "Pending Admin Approval": { bg: "#E3F2FD", text: "#1976D2" },
   "Confirmed": { bg: "#E6F9EC", text: "#2DC653" },
   "Cancelled": { bg: "#FDECEA", text: "#E63946" },
@@ -74,7 +74,7 @@ export default function AdminBookingsScreen() {
 
   const getFullImageUrl = (path: string) => {
     if (!path) return null;
-    const baseUrl = API.defaults.baseURL?.replace("/api", "") || "http://172.28.19.108:5000";
+    const baseUrl = (process.env.EXPO_PUBLIC_API_URL || API.defaults.baseURL || "").replace("/api", "");
     return `${baseUrl}/uploads/${path}`;
   };
 
@@ -114,7 +114,7 @@ export default function AdminBookingsScreen() {
           renderItem={({ item }) => {
             const sc = STATUS_COLORS[item.status] || STATUS_COLORS["Pending Payment"];
             const psc = STATUS_COLORS[item.paymentStatus] || STATUS_COLORS["No Payment"];
-            
+
             return (
               <View style={styles.card}>
                 <View style={styles.cardTop}>
@@ -143,7 +143,7 @@ export default function AdminBookingsScreen() {
                     Room: {item.roomId?.roomNumber || "—"} ({item.roomId?.roomType || "—"})
                   </Text>
                 </View>
-                
+
                 <View style={styles.infoRow}>
                   <Ionicons name="cash-outline" size={15} color="#888" />
                   <Text style={styles.infoText}>
@@ -159,8 +159,8 @@ export default function AdminBookingsScreen() {
                 </View>
 
                 {item.paymentSlip && (
-                  <TouchableOpacity 
-                    style={styles.viewSlipBtn} 
+                  <TouchableOpacity
+                    style={styles.viewSlipBtn}
                     onPress={() => {
                       setSelectedSlipUrl(getFullImageUrl(item.paymentSlip));
                       setModalVisible(true);
@@ -183,21 +183,23 @@ export default function AdminBookingsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.actionsRow}>
-                  {item.status === "Pending Admin Approval" && (
-                    <TouchableOpacity style={styles.approveBtn} onPress={() => approveBookingAndPayment(item._id, item.paymentId)}>
-                      <Text style={styles.approveBtnText}>Approve</Text>
+                {item.status !== "Completed" && item.status !== "Cancelled" && item.status !== "Rejected" && (
+                  <View style={styles.actionsRow}>
+                    {item.status === "Pending Admin Approval" && (
+                      <TouchableOpacity style={styles.approveBtn} onPress={() => approveBookingAndPayment(item._id, item.paymentId)}>
+                        <Text style={styles.approveBtnText}>Approve</Text>
+                      </TouchableOpacity>
+                    )}
+                    {item.status === "Confirmed" && (
+                      <TouchableOpacity style={[styles.approveBtn, { backgroundColor: '#9C27B0' }]} onPress={() => updateBookingStatus(item._id, "Completed")}>
+                        <Text style={styles.approveBtnText}>Complete</Text>
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity style={styles.cancelBtn} onPress={() => updateBookingStatus(item._id, "Cancelled")}>
+                      <Text style={styles.cancelBtnText}>Cancel</Text>
                     </TouchableOpacity>
-                  )}
-                  {item.status === "Confirmed" && (
-                    <TouchableOpacity style={[styles.approveBtn, {backgroundColor: '#9C27B0'}]} onPress={() => updateBookingStatus(item._id, "Completed")}>
-                      <Text style={styles.approveBtnText}>Complete</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity style={styles.cancelBtn} onPress={() => updateBookingStatus(item._id, "Cancelled")}>
-                    <Text style={styles.cancelBtnText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                )}
 
               </View>
             );
