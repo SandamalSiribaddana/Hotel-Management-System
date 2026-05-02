@@ -33,7 +33,7 @@ export default function AdminComplaintsScreen() {
   };
 
   const getImageUrl = (filename: string) => {
-    if (!filename) return null;
+    if (!filename) return undefined;
     if (filename.startsWith("http")) return filename;
     const baseUrl = API.defaults.baseURL?.replace("/api", "") || "";
     // Handle both stored as filename-only and full path
