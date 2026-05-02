@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const roomController = require("../controllers/roomController");
+const upload = require("../middleware/upload");
 
 // Test route
 router.get("/test", (req, res) => {
@@ -8,10 +9,10 @@ router.get("/test", (req, res) => {
 });
 
 // CRUD routes
-router.post("/", roomController.createRoom);
+router.post("/", upload.single("image"), roomController.createRoom);
 router.get("/", roomController.getAllRooms);
 router.get("/:id", roomController.getSingleRoom);
-router.put("/:id", roomController.updateRoom);
+router.put("/:id", upload.single("image"), roomController.updateRoom);
 router.delete("/:id", roomController.deleteRoom);
 
 module.exports = router;
