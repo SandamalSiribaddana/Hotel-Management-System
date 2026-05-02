@@ -5,7 +5,7 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-     Alert,
+  Alert,
   Image,
   TouchableOpacity,
   Modal,
@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import API from "../../services/api";
 
 const EMPTY_FORM = {
@@ -23,6 +25,7 @@ const EMPTY_FORM = {
 };
 
 export default function ServicesScreen() {
+  const router = useRouter();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -112,8 +115,12 @@ export default function ServicesScreen() {
         type: mimeType,
       } as any);
 
+      const token = await AsyncStorage.getItem("token");
       await API.post("/service-payments", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
       
       Alert.alert("Success", "Service request submitted successfully! Pending approval.");
@@ -159,6 +166,18 @@ export default function ServicesScreen() {
 
   return (
     <View style={styles.container}>
+      {/* My Requests Header Button */}
+      <View style={styles.topBar}>
+        <Text style={styles.topBarTitle}>Available Services</Text>
+        <TouchableOpacity
+          style={styles.myRequestsBtn}
+          onPress={() => router.push("/my-service-requests" as any)}
+        >
+          <Ionicons name="receipt-outline" size={16} color="#fff" />
+          <Text style={styles.myRequestsBtnText}>My Requests</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={services}
         keyExtractor={(item: any) => item._id}
@@ -218,8 +237,37 @@ export default function ServicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#F4F6FB" },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F5F3FF" },
+  container: { flex: 1, backgroundColor: "#F5F3FF" },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2DEFF",
+  },
+  topBarTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A1240",
+  },
+  myRequestsBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#5B3FE4",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  myRequestsBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
   listContainer: { padding: 15 },
   card: {
     backgroundColor: "#fff",
