@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const servicePaymentSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     customerName: {
       type: String,
       required: true,
@@ -23,7 +28,7 @@ const servicePaymentSchema = new mongoose.Schema(
       required: true,
     },
     paymentSlip: {
-      type: String, // URL/path to the uploaded slip
+      type: String, 
       required: true,
     },
     status: {
