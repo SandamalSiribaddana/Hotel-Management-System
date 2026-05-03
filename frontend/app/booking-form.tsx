@@ -78,7 +78,7 @@ export default function BookingFormScreen() {
 
       <View style={styles.form}>
         <Text style={styles.label}>Full Name</Text>
-        <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder="John Doe" />
+        <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder="Kasun Perera" />
 
         <Text style={styles.label}>Identity Card Number (NIC)</Text>
         <TextInput style={styles.input} value={nicNumber} onChangeText={setNicNumber} placeholder="123456789V" />
@@ -87,7 +87,7 @@ export default function BookingFormScreen() {
         <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="0712345678" />
 
         <Text style={styles.label}>Email Address</Text>
-        <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="john@example.com" />
+        <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="kasun@example.com" />
 
         <Text style={styles.label}>Number of Persons</Text>
         <TextInput style={styles.input} value={numberOfPersons} onChangeText={setNumberOfPersons} keyboardType="numeric" />
