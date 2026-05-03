@@ -47,26 +47,20 @@ export default function PaymentInvoiceScreen() {
       const token = await AsyncStorage.getItem("token");
       
       // Step 1: Create Booking
-      const bookingFormData = new FormData();
-      bookingFormData.append("roomId", params.roomId as string);
-      bookingFormData.append("fullName", params.fullName as string);
-      bookingFormData.append("nicNumber", params.nicNumber as string);
-      bookingFormData.append("phone", params.phone as string);
-      bookingFormData.append("email", params.email as string);
-      bookingFormData.append("numberOfPersons", params.numberOfPersons as string);
-      bookingFormData.append("checkInDate", params.checkInDate as string);
-      bookingFormData.append("checkOutDate", params.checkOutDate as string);
-      
-      bookingFormData.append("nicImage", {
-        uri: params.nicImageUri,
-        name: params.nicImageName || "nic.jpg",
-        type: params.nicImageType || "image/jpeg",
-      } as any);
+      const bookingData = {
+        roomId: params.roomId,
+        fullName: params.fullName,
+        nicNumber: params.nicNumber,
+        phone: params.phone,
+        email: params.email,
+        numberOfPersons: params.numberOfPersons,
+        checkInDate: params.checkInDate,
+        checkOutDate: params.checkOutDate,
+      };
 
-      const bookingResponse = await API.post("/bookings/create-with-nic", bookingFormData, {
+      const bookingResponse = await API.post("/bookings/create-with-nic", bookingData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
         },
       });
 

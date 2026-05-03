@@ -83,12 +83,6 @@ const createBookingWithNic = async (req, res) => {
       });
     }
 
-    if (!req.file) {
-      return res.status(400).json({
-        message: "Please upload your Identity Card photo",
-      });
-    }
-
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
       return res.status(400).json({
         message: "Invalid room ID format",
@@ -142,7 +136,6 @@ const createBookingWithNic = async (req, res) => {
       numberOfNights,
       totalAmount,
       halfPayment,
-      nicImage: req.file.filename,
       status: "Pending Payment",
     });
 
