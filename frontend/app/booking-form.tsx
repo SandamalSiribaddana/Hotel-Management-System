@@ -12,23 +12,10 @@ export default function BookingFormScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [numberOfPersons, setNumberOfPersons] = useState("1");
-  const [nicImage, setNicImage] = useState<any>(null);
-
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setNicImage(result.assets[0]);
-    }
-  };
 
   const handleSubmit = () => {
-    if (!fullName || !nicNumber || !phone || !email || !numberOfPersons || !nicImage) {
-      Alert.alert("Error", "Please fill all fields and upload NIC image");
+    if (!fullName || !nicNumber || !phone || !email || !numberOfPersons) {
+      Alert.alert("Error", "Please fill all fields");
       return;
     }
 
@@ -76,9 +63,6 @@ export default function BookingFormScreen() {
         phone,
         email,
         numberOfPersons,
-        nicImageUri: nicImage.uri,
-        nicImageType: nicImage.type || "image/jpeg",
-        nicImageName: nicImage.fileName || "nic.jpg",
       }
     });
   };
@@ -109,15 +93,6 @@ export default function BookingFormScreen() {
         <Text style={styles.label}>Number of Persons</Text>
         <TextInput style={styles.input} value={numberOfPersons} onChangeText={setNumberOfPersons} keyboardType="numeric" />
 
-        <Text style={styles.label}>NIC Image (Required)</Text>
-        <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
-          <Text style={styles.uploadBtnText}>{nicImage ? "Change Image" : "Upload NIC Photo"}</Text>
-        </TouchableOpacity>
-        
-        {nicImage && (
-          <Image source={{ uri: nicImage.uri }} style={styles.imagePreview} />
-        )}
-
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
           <Text style={styles.submitBtnText}>Proceed to Payment</Text>
         </TouchableOpacity>
@@ -136,7 +111,6 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: "#E0E5F2", borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 16, backgroundColor: "#FAFAFA" },
   uploadBtn: { backgroundColor: "#E0E5F2", padding: 15, borderRadius: 10, alignItems: "center", marginBottom: 16 },
   uploadBtnText: { color: "#1A1A2E", fontWeight: "600" },
-  imagePreview: { width: "100%", height: 200, borderRadius: 10, marginBottom: 16 },
   submitBtn: { backgroundColor: "#6C63FF", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 10 },
   submitBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" }
 });

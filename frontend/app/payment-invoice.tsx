@@ -57,11 +57,7 @@ export default function PaymentInvoiceScreen() {
       bookingFormData.append("checkInDate", params.checkInDate as string);
       bookingFormData.append("checkOutDate", params.checkOutDate as string);
       
-      bookingFormData.append("nicImage", {
-        uri: params.nicImageUri,
-        name: params.nicImageName || "nic.jpg",
-        type: params.nicImageType || "image/jpeg",
-      } as any);
+
 
       const bookingResponse = await API.post("/bookings/create-with-nic", bookingFormData, {
         headers: {
