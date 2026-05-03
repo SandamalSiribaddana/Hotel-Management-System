@@ -1,5 +1,6 @@
 const Payment = require("../models/Payment");
 const Booking = require("../models/Booking");
+const ServicePayment = require("../models/ServicePayment");
 const mongoose = require("mongoose");
 
 // Upload payment slip and create payment
@@ -94,15 +95,43 @@ const getAllPayments = async (req, res) => {
       };
     });
 
-    const totalRevenue = formattedPayments.reduce((sum, payment) => {
+    const bookingRevenue = formattedPayments.reduce((sum, payment) => {
       return sum + Number(payment.revenueAmount || payment.paidAmount || payment.totalAmount || 0);
     }, 0);
 
+    const approvedServices = await ServicePayment.find({ status: "Approved" });
+    const serviceRevenue = approvedServices.reduce((sum, service) => {
+      return sum + Number(service.servicePrice || 0);
+    }, 0);
+
+    const formattedServices = approvedServices.map((p) => {
+      return {
+        _id: p._id,
+        isServicePayment: true,
+        customerName: p.customerName,
+        nic: p.customerId,
+        serviceName: p.serviceName,
+        totalAmount: p.servicePrice,
+        paidAmount: p.servicePrice,
+        paymentStatus: "Verified",
+        bookingStatus: p.status, // "Approved"
+        completedDate: p.updatedAt,
+        paymentSlip: p.paymentSlip,
+        createdAt: p.createdAt,
+      };
+    });
+
+    const allPayments = [...formattedPayments, ...formattedServices].sort((a, b) => {
+      return new Date(b.completedDate) - new Date(a.completedDate);
+    });
+
+    const totalRevenue = bookingRevenue + serviceRevenue;
+
     res.status(200).json({
       message: "Payments fetched successfully",
-      count: formattedPayments.length,
+      count: allPayments.length,
       totalRevenue,
-      payments: formattedPayments,
+      payments: allPayments,
     });
   } catch (error) {
     res.status(500).json({
