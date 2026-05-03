@@ -97,7 +97,7 @@ export default function AdminPaymentsScreen() {
                   </Text>
                 </View>
                 <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>Completed</Text>
+                  <Text style={styles.statusText}>{item.isServicePayment ? "Approved" : "Completed"}</Text>
                 </View>
               </View>
 
@@ -108,9 +108,11 @@ export default function AdminPaymentsScreen() {
                 </Text>
               </View>
               <View style={styles.infoRow}>
-                <Ionicons name="bed-outline" size={15} color="#888" />
+                <Ionicons name={item.isServicePayment ? "construct-outline" : "bed-outline"} size={15} color="#888" />
                 <Text style={styles.infoText}>
-                  Room: {item.roomNumber} ({item.roomType})
+                  {item.isServicePayment 
+                    ? `Service: ${item.serviceName}`
+                    : `Room: ${item.roomNumber || "N/A"} (${item.roomType || "N/A"})`}
                 </Text>
               </View>
               <View style={styles.infoRow}>
@@ -139,17 +141,19 @@ export default function AdminPaymentsScreen() {
                 </TouchableOpacity>
               )}
 
-              <View style={styles.dateRow}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateLabel}>Check-in</Text>
-                  <Text style={styles.dateValue}>{formatDate(item.checkInDate)}</Text>
+              {!item.isServicePayment && (
+                <View style={styles.dateRow}>
+                  <View style={styles.dateBox}>
+                    <Text style={styles.dateLabel}>Check-in</Text>
+                    <Text style={styles.dateValue}>{formatDate(item.checkInDate)}</Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={16} color="#bbb" />
+                  <View style={styles.dateBox}>
+                    <Text style={styles.dateLabel}>Check-out</Text>
+                    <Text style={styles.dateValue}>{formatDate(item.checkOutDate)}</Text>
+                  </View>
                 </View>
-                <Ionicons name="arrow-forward" size={16} color="#bbb" />
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateLabel}>Check-out</Text>
-                  <Text style={styles.dateValue}>{formatDate(item.checkOutDate)}</Text>
-                </View>
-              </View>
+              )}
               
               <Text style={styles.completedDate}>
                 Completed on {formatDate(item.completedDate)}

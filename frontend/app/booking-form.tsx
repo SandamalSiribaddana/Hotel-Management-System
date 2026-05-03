@@ -108,6 +108,8 @@ const styles = StyleSheet.create({
   form: { backgroundColor: "#fff", padding: 20, borderRadius: 16, elevation: 2, marginBottom: 40 },
   label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
   input: { borderWidth: 1, borderColor: "#E0E5F2", borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 16, backgroundColor: "#FAFAFA" },
+
+
   submitBtn: { backgroundColor: "#6C63FF", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 10 },
   submitBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" }
 });
