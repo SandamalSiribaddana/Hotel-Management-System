@@ -17,6 +17,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import API from "../../services/api";
+import { formatCurrency } from "../../utils/currency";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -159,7 +160,7 @@ export default function AdminServiceRequestsScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.modalHeaderTitle}>Payment Slip</Text>
               <Text style={styles.modalHeaderSub}>
-                {viewingItem.serviceName} · ${viewingItem.servicePrice}
+                {viewingItem.serviceName} · {formatCurrency(viewingItem.servicePrice)}
               </Text>
             </View>
           </View>
@@ -319,7 +320,7 @@ export default function AdminServiceRequestsScreen() {
         <View style={styles.cardTop}>
           <View style={{ flex: 1 }}>
             <Text style={styles.serviceName}>{item.serviceName}</Text>
-            <Text style={styles.price}>${item.servicePrice}</Text>
+            <Text style={styles.price}>{formatCurrency(item.servicePrice)}</Text>
           </View>
           <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.badgeText, { color: cfg.color }]}>

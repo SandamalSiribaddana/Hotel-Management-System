@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import API from "../../services/api";
+import { formatCurrency } from "../../utils/currency";
 
 const EMPTY = { name: "", description: "", price: "", availability: true, imageUri: null as string | null };
 
@@ -178,7 +179,7 @@ export default function AdminServicesScreen() {
               <View style={styles.cardBody}>
                 <Text style={styles.cardTitle}>{item.name}</Text>
                 <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-                <Text style={styles.cardPrice}>${item.price}</Text>
+                <Text style={styles.cardPrice}>{formatCurrency(item.price)}</Text>
                 <Text style={[styles.statusBadge, item.availability ? styles.statusAvailable : styles.statusUnavailable]}>
                   {item.availability ? "Available" : "Not Available"}
                 </Text>

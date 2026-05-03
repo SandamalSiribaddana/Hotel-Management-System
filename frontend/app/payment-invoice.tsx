@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../services/api";
+import { formatCurrency } from "../utils/currency";
 
 export default function PaymentInvoiceScreen() {
   const params = useLocalSearchParams();
@@ -47,26 +48,20 @@ export default function PaymentInvoiceScreen() {
       const token = await AsyncStorage.getItem("token");
       
       // Step 1: Create Booking
-      const bookingFormData = new FormData();
-      bookingFormData.append("roomId", params.roomId as string);
-      bookingFormData.append("fullName", params.fullName as string);
-      bookingFormData.append("nicNumber", params.nicNumber as string);
-      bookingFormData.append("phone", params.phone as string);
-      bookingFormData.append("email", params.email as string);
-      bookingFormData.append("numberOfPersons", params.numberOfPersons as string);
-      bookingFormData.append("checkInDate", params.checkInDate as string);
-      bookingFormData.append("checkOutDate", params.checkOutDate as string);
-      
-      bookingFormData.append("nicImage", {
-        uri: params.nicImageUri,
-        name: params.nicImageName || "nic.jpg",
-        type: params.nicImageType || "image/jpeg",
-      } as any);
+      const bookingData = {
+        roomId: params.roomId,
+        fullName: params.fullName,
+        nicNumber: params.nicNumber,
+        phone: params.phone,
+        email: params.email,
+        numberOfPersons: params.numberOfPersons,
+        checkInDate: params.checkInDate,
+        checkOutDate: params.checkOutDate,
+      };
 
-      const bookingResponse = await API.post("/bookings/create-with-nic", bookingFormData, {
+      const bookingResponse = await API.post("/bookings/create-with-nic", bookingData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -114,17 +109,17 @@ export default function PaymentInvoiceScreen() {
         <View style={styles.row}><Text style={styles.label}>Check-in:</Text><Text style={styles.value}>{params.checkInDate}</Text></View>
         <View style={styles.row}><Text style={styles.label}>Check-out:</Text><Text style={styles.value}>{params.checkOutDate}</Text></View>
         <View style={styles.row}><Text style={styles.label}>Nights:</Text><Text style={styles.value}>{numberOfNights}</Text></View>
-        <View style={styles.row}><Text style={styles.label}>Price/Night:</Text><Text style={styles.value}>${price}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Price/Night:</Text><Text style={styles.value}>{formatCurrency(price)}</Text></View>
         
         <View style={styles.divider} />
         
-        <View style={styles.row}><Text style={styles.totalLabel}>Total Payment:</Text><Text style={styles.totalValue}>${totalAmount}</Text></View>
-        <View style={styles.row}><Text style={styles.halfLabel}>Half Payment (Required):</Text><Text style={styles.halfValue}>${halfPayment}</Text></View>
+        <View style={styles.row}><Text style={styles.totalLabel}>Total Payment:</Text><Text style={styles.totalValue}>{formatCurrency(totalAmount)}</Text></View>
+        <View style={styles.row}><Text style={styles.halfLabel}>Half Payment (Required):</Text><Text style={styles.halfValue}>{formatCurrency(halfPayment)}</Text></View>
       </View>
 
       <View style={styles.uploadCard}>
         <Text style={styles.sectionTitle}>Upload Payslip</Text>
-        <Text style={styles.desc}>Please deposit ${halfPayment} to our bank account and upload the receipt here (PDF or Image).</Text>
+        <Text style={styles.desc}>Please deposit {formatCurrency(halfPayment)} to our bank account and upload the receipt here (PDF or Image).</Text>
         
         <TouchableOpacity style={styles.uploadBtn} onPress={pickDocument}>
           <Text style={styles.uploadBtnText}>{payslip ? "Change Document" : "Select Payslip"}</Text>

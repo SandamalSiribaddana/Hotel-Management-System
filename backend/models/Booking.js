@@ -52,10 +52,6 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    nicImage: {
-      type: String,
-      required: true,
-    },
     status: {
       type: String,
       enum: ["Pending Payment", "Pending Admin Approval", "Confirmed", "Cancelled", "Completed"],

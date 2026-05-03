@@ -19,7 +19,7 @@ const upload = require("../middleware/uploadMiddleware");
 router.post("/check-availability", protect, checkAvailability);
 
 // Create booking with NIC
-router.post("/create-with-nic", protect, upload.single("nicImage"), createBookingWithNic);
+router.post("/create-with-nic", protect, createBookingWithNic);
 
 // Get all bookings
 router.get("/", protect, getAllBookings);

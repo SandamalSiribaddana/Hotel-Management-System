@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { formatCurrency } from "../../utils/currency";
 
 export default function AdminPaymentsScreen() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -71,7 +72,7 @@ export default function AdminPaymentsScreen() {
       <View style={styles.revenueBanner}>
         <View>
           <Text style={styles.revenueLabel}>Total Revenue</Text>
-          <Text style={styles.revenueAmount}>${totalRevenue.toFixed(2)}</Text>
+          <Text style={styles.revenueAmount}>{formatCurrency(totalRevenue)}</Text>
         </View>
         <View style={styles.revenueIcon}>
           <Ionicons name="trending-up-outline" size={28} color="#2DC653" />
@@ -115,7 +116,7 @@ export default function AdminPaymentsScreen() {
               <View style={styles.infoRow}>
                 <Ionicons name="cash-outline" size={15} color="#888" />
                 <Text style={styles.infoText}>
-                  Total: ${item.totalAmount} (Paid: ${item.paidAmount})
+                  Total: {formatCurrency(item.totalAmount)} (Paid: {formatCurrency(item.paidAmount)})
                 </Text>
               </View>
               <View style={styles.infoRow}>

@@ -13,6 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import API from "../services/api";
+import { formatCurrency } from "../utils/currency";
 
 // ─── Theme ────────────────────────────────────────────────────────
 const C = {
@@ -107,7 +108,7 @@ export default function MyServiceRequestsScreen() {
             <Text style={styles.serviceName}>{item.serviceName}</Text>
             <Text style={styles.date}>Requested on {date}</Text>
           </View>
-          <Text style={styles.price}>${item.servicePrice}</Text>
+          <Text style={styles.price}>{formatCurrency(item.servicePrice)}</Text>
         </View>
 
         {/* Divider */}
