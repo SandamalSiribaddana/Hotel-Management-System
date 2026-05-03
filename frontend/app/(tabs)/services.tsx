@@ -106,7 +106,7 @@ export default function ServicesScreen() {
 
       const uriParts = slipUri.split(".");
       const fileType = uriParts[uriParts.length - 1];
-      
+
       let mimeType = `image/${fileType}`;
       if (fileType.toLowerCase() === 'pdf') mimeType = 'application/pdf';
 
@@ -123,7 +123,7 @@ export default function ServicesScreen() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       Alert.alert("Success", "Service request submitted successfully! Pending approval.");
       setModalVisible(false);
     } catch (e: any) {
@@ -150,14 +150,14 @@ export default function ServicesScreen() {
           <Ionicons name="image-outline" size={32} color="#aaa" />
         </View>
       )}
-      
+
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <Text style={styles.serviceName}>{item.name}</Text>
           <Text style={styles.price}>{formatCurrency(item.price)}</Text>
         </View>
         <Text style={styles.description}>{item.description}</Text>
-        
+
         <TouchableOpacity style={styles.buyBtn} onPress={() => openPaymentModal(item)}>
           <Text style={styles.buyBtnText}>Buy Service</Text>
         </TouchableOpacity>
@@ -195,7 +195,7 @@ export default function ServicesScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
-                { key: "customerName", label: "Customer Name *", placeholder: "e.g. John Doe" },
+                { key: "customerName", label: "Customer Name *", placeholder: "e.g. Suresh Bandara" },
                 { key: "customerId", label: "ID / NIC *", placeholder: "e.g. 123456789V" },
                 { key: "phoneNumber", label: "Phone Number *", placeholder: "e.g. 0712345678", keyboard: "phone-pad" },
               ].map((f) => (
