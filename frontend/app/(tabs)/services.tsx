@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import API from "../../services/api";
+import { formatCurrency } from "../../utils/currency";
 
 const EMPTY_FORM = {
   customerName: "",
@@ -153,7 +154,7 @@ export default function ServicesScreen() {
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <Text style={styles.serviceName}>{item.name}</Text>
-          <Text style={styles.price}>${item.price}</Text>
+          <Text style={styles.price}>{formatCurrency(item.price)}</Text>
         </View>
         <Text style={styles.description}>{item.description}</Text>
         
@@ -190,7 +191,7 @@ export default function ServicesScreen() {
         <View style={styles.overlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Request {selectedService?.name}</Text>
-            <Text style={styles.modalSubtitle}>Price: ${selectedService?.price}</Text>
+            <Text style={styles.modalSubtitle}>Price: {formatCurrency(selectedService?.price)}</Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {[

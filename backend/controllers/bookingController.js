@@ -83,6 +83,8 @@ const createBookingWithNic = async (req, res) => {
       });
     }
 
+
+
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
       return res.status(400).json({
         message: "Invalid room ID format",

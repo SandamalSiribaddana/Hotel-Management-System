@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { formatCurrency } from "../../utils/currency";
 
 const EMPTY = { name: "", role: "", phone: "", email: "", salary: "" };
 
@@ -218,7 +219,7 @@ export default function AdminStaffScreen() {
                   </View>
                   <View style={styles.infoRow}>
                     <Ionicons name="cash-outline" size={13} color="#aaa" />
-                    <Text style={styles.infoText}>${item.salary}/month</Text>
+                    <Text style={styles.infoText}>{formatCurrency(item.salary)}/month</Text>
                   </View>
                   <View style={styles.actions}>
                     <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(item)}>

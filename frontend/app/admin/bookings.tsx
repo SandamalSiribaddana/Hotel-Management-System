@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { formatCurrency } from "../../utils/currency";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   "Pending Payment": { bg: "#FFF8E1", text: "#F77F00" },
@@ -147,7 +148,7 @@ export default function AdminBookingsScreen() {
                 <View style={styles.infoRow}>
                   <Ionicons name="cash-outline" size={15} color="#888" />
                   <Text style={styles.infoText}>
-                    Total: ${item.totalAmount} (Half: ${item.halfPayment})
+                    Total: {formatCurrency(item.totalAmount)} (Half: {formatCurrency(item.halfPayment)})
                   </Text>
                 </View>
 

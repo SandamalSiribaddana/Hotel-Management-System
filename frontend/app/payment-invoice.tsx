@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API from "../services/api";
+import { formatCurrency } from "../utils/currency";
 
 export default function PaymentInvoiceScreen() {
   const params = useLocalSearchParams();
@@ -108,17 +109,17 @@ export default function PaymentInvoiceScreen() {
         <View style={styles.row}><Text style={styles.label}>Check-in:</Text><Text style={styles.value}>{params.checkInDate}</Text></View>
         <View style={styles.row}><Text style={styles.label}>Check-out:</Text><Text style={styles.value}>{params.checkOutDate}</Text></View>
         <View style={styles.row}><Text style={styles.label}>Nights:</Text><Text style={styles.value}>{numberOfNights}</Text></View>
-        <View style={styles.row}><Text style={styles.label}>Price/Night:</Text><Text style={styles.value}>${price}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Price/Night:</Text><Text style={styles.value}>{formatCurrency(price)}</Text></View>
         
         <View style={styles.divider} />
         
-        <View style={styles.row}><Text style={styles.totalLabel}>Total Payment:</Text><Text style={styles.totalValue}>${totalAmount}</Text></View>
-        <View style={styles.row}><Text style={styles.halfLabel}>Half Payment (Required):</Text><Text style={styles.halfValue}>${halfPayment}</Text></View>
+        <View style={styles.row}><Text style={styles.totalLabel}>Total Payment:</Text><Text style={styles.totalValue}>{formatCurrency(totalAmount)}</Text></View>
+        <View style={styles.row}><Text style={styles.halfLabel}>Half Payment (Required):</Text><Text style={styles.halfValue}>{formatCurrency(halfPayment)}</Text></View>
       </View>
 
       <View style={styles.uploadCard}>
         <Text style={styles.sectionTitle}>Upload Payslip</Text>
-        <Text style={styles.desc}>Please deposit ${halfPayment} to our bank account and upload the receipt here (PDF or Image).</Text>
+        <Text style={styles.desc}>Please deposit {formatCurrency(halfPayment)} to our bank account and upload the receipt here (PDF or Image).</Text>
         
         <TouchableOpacity style={styles.uploadBtn} onPress={pickDocument}>
           <Text style={styles.uploadBtnText}>{payslip ? "Change Document" : "Select Payslip"}</Text>

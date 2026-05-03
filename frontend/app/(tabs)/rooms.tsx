@@ -12,7 +12,9 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import API from "../../services/api";
+import { formatCurrency } from "../../utils/currency";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -146,7 +148,7 @@ export default function RoomsScreen() {
             <View style={styles.cardContent}>
               <Text style={styles.roomType}>{item.roomType}</Text>
               <Text style={styles.roomNumber}>Room {item.roomNumber}</Text>
-              <Text style={styles.price}>${item.price} / night</Text>
+              <Text style={styles.price}>{formatCurrency(item.price)} / night</Text>
               <Text style={styles.capacity}>Capacity: {item.maxPersons} persons</Text>
               <Text style={styles.desc}>{item.description}</Text>
               <Text

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 
 export default function BookingFormScreen() {
   const params = useLocalSearchParams();
@@ -48,7 +47,7 @@ export default function BookingFormScreen() {
 
     if (numPersons > maxPersons) {
       Alert.alert(
-        "Capacity Exceeded", 
+        "Capacity Exceeded",
         `This ${params.roomType} room allows a maximum of ${maxPersons} person(s).`
       );
       return;
@@ -70,7 +69,7 @@ export default function BookingFormScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Customer Details</Text>
-      
+
       <View style={styles.infoCard}>
         <Text style={styles.infoText}>Room: {params.roomType} ({params.roomNumber})</Text>
         <Text style={styles.infoText}>Check-in: {params.checkInDate}</Text>
@@ -80,7 +79,7 @@ export default function BookingFormScreen() {
       <View style={styles.form}>
         <Text style={styles.label}>Full Name</Text>
         <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder="John Doe" />
-        
+
         <Text style={styles.label}>Identity Card Number (NIC)</Text>
         <TextInput style={styles.input} value={nicNumber} onChangeText={setNicNumber} placeholder="123456789V" />
 
@@ -109,8 +108,8 @@ const styles = StyleSheet.create({
   form: { backgroundColor: "#fff", padding: 20, borderRadius: 16, elevation: 2, marginBottom: 40 },
   label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
   input: { borderWidth: 1, borderColor: "#E0E5F2", borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 16, backgroundColor: "#FAFAFA" },
-  uploadBtn: { backgroundColor: "#E0E5F2", padding: 15, borderRadius: 10, alignItems: "center", marginBottom: 16 },
-  uploadBtnText: { color: "#1A1A2E", fontWeight: "600" },
+
+
   submitBtn: { backgroundColor: "#6C63FF", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 10 },
   submitBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" }
 });

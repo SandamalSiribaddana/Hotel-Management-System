@@ -17,6 +17,7 @@ import API from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { Image, Platform } from "react-native";
+import { formatCurrency } from "../../utils/currency";
 
 const EMPTY_ROOM = {
   roomNumber: "",
@@ -225,7 +226,7 @@ export default function AdminRoomsScreen() {
               <Text style={styles.roomType}>{item.roomType}</Text>
               <Text style={styles.roomDesc} numberOfLines={2}>{item.description}</Text>
               <View style={styles.cardMeta}>
-                <Text style={styles.metaItem}>💰 ${item.price}/night</Text>
+                <Text style={styles.metaItem}>💰 {formatCurrency(item.price)}/night</Text>
                 <Text style={styles.metaItem}>👥 {item.maxPersons} guests</Text>
               </View>
               <View style={styles.actions}>

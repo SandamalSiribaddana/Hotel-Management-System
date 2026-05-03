@@ -10,7 +10,9 @@ import {
   Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import API from "../../services/api";
+import { formatCurrency } from "../../utils/currency";
 
 export default function BookingsScreen() {
   const [bookings, setBookings] = useState([]);
@@ -94,7 +96,7 @@ export default function BookingsScreen() {
           <Text style={[styles.status, { color: statusColor, backgroundColor: statusBg }]}>
             {item.status}
           </Text>
-          <Text style={styles.price}>Total: ${item.totalAmount}</Text>
+          <Text style={styles.price}>Total: {formatCurrency(item.totalAmount)}</Text>
           
           {(item.status === "Completed" || item.status === "Cancelled") && (
             <TouchableOpacity 
