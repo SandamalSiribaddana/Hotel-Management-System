@@ -96,6 +96,12 @@ export default function AdminStaffScreen() {
       Alert.alert("Validation", "Please fill all fields.");
       return;
     }
+    
+    if (!form.email.includes("@")) {
+      Alert.alert("Validation", "Please enter a valid email containing '@'.");
+      return;
+    }
+
     setSaving(true);
     try {
       const headers = await getHeaders();
